@@ -1,0 +1,19 @@
+alias: EV - Protezione limiti (Auto master)
+triggers:
+  - entity_id:
+      - input_number.limite_batteria_manuale
+      - input_number.limite_batteria_auto
+    trigger: state
+conditions:
+  - condition: template
+    value_template: "{{ limite_manuale > limite_auto }}"
+actions:
+  - target:
+      entity_id: input_number.limite_batteria_manuale
+    data:
+      value: "{{ limite_auto }}"
+    action: input_number.set_value
+mode: restart
+variables:
+  limite_auto: "{{ states('input_number.limite_batteria_auto') | float(80) }}"
+  limite_manuale: "{{ states('input_number.limite_batteria_manuale') | float(50) }}"
