@@ -1,0 +1,140 @@
+alias: EV - Notifiche Ricarica - HA
+description: >
+  Notifiche Companion App di avvio/fine ricarica per FV surplus, notturna F3 e
+  FORZA.
+triggers:
+  - trigger: state
+    id: charge_started
+    entity_id: sensor.silla_prism_stato_wallbox
+    to: charging
+    for: "00:00:10"
+  - trigger: state
+    id: charge_stopped
+    entity_id: sensor.silla_prism_stato_wallbox
+    from: charging
+    for: "00:00:15"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'charge_started' }}"
+        sequence:
+          - target:
+              entity_id: input_select.ev_modalita_ricarica_corrente
+            data:
+              option: "{{ modalita_corrente }}"
+            action: input_select.select_option
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_corrente == 'fv_surplus' }}"
+                sequence:
+                  - data:
+                      title: 🚗 Ricarica Avviata 🚗
+                      message: |
+                        Modalità: FV Surplus ☀️
+                        SOC: {{ soc }}%
+                        Target: {{ limite_auto }}%
+                    action: notify.mobile_app_famiglia
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_corrente == 'notturna_f3' }}"
+                sequence:
+                  - data:
+                      title: 🚗 Ricarica Avviata 🚗
+                      message: |
+                        Modalità: Notturna F3 🌙
+                        SOC: {{ soc }}%
+                        Target: {{ limite_utente }}%
+                    action: notify.mobile_app_famiglia
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_corrente == 'forza' }}"
+                sequence:
+                  - data:
+                      title: 🚗 Ricarica Avviata 🚗
+                      message: |
+                        Modalità: FORZA ⚡
+                        SOC: {{ soc }}%
+                        Target: {{ limite_auto }}%
+                    action: notify.mobile_app_famiglia
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_corrente == 'sconosciuta' }}"
+                sequence:
+                  - data:
+                      title: 🚗 Ricarica Avviata 🚗
+                      message: |
+                        Modalità: Sconosciuta ❓
+                        SOC: {{ soc }}%
+                    action: notify.mobile_app_famiglia
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'charge_stopped' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_salvata == 'fv_surplus' }}"
+                sequence:
+                  - data:
+                      title: 🏁 Ricarica Terminata 🏁
+                      message: |
+                        Modalità: FV Surplus ☀️
+                        SOC finale: {{ soc }}%
+                    action: notify.mobile_app_famiglia
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_salvata == 'notturna_f3' }}"
+                sequence:
+                  - data:
+                      title: 🏁 Ricarica Terminata 🏁
+                      message: |
+                        Modalità: Notturna F3 🌙
+                        SOC finale: {{ soc }}%
+                    action: notify.mobile_app_famiglia
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_salvata == 'forza' }}"
+                sequence:
+                  - data:
+                      title: 🏁 Ricarica Terminata 🏁
+                      message: |
+                        Modalità: FORZA ⚡
+                        SOC finale: {{ soc }}%
+                    action: notify.mobile_app_famiglia
+              - conditions:
+                  - condition: template
+                    value_template: "{{ modalita_salvata == 'sconosciuta' }}"
+                sequence:
+                  - data:
+                      title: 🏁 Ricarica Terminata 🏁
+                      message: |
+                        Modalità: Sconosciuta ❓
+                        SOC finale: {{ soc }}%
+                    action: notify.mobile_app_famiglia
+          - target:
+              entity_id: input_select.ev_modalita_ricarica_corrente
+            data:
+              option: sconosciuta
+            action: input_select.select_option
+mode: restart
+variables:
+  soc: "{{ states('sensor.elroq_percentuale_batteria') | int(0) }}"
+  limite_utente: "{{ states('input_number.limite_batteria_manuale') | int(50) }}"
+  limite_auto: "{{ states('input_number.limite_batteria_auto') | int(80) }}"
+  forza: "{{ is_state('input_boolean.forza_ricarica','on') }}"
+  solar_active: "{{ is_state('input_boolean.ev_solar_controller_active','on') }}"
+  fascia: "{{ states('sensor.pun_fascia_corrente') }}"
+  wb_mode: "{{ states('sensor.silla_prism_modo_della_porta') }}"
+  modalita_salvata: "{{ states('input_select.ev_modalita_ricarica_corrente') }}"
+  modalita_corrente: |
+    {% if forza %}
+      forza
+    {% elif solar_active or wb_mode in ['solar','Solare'] %}
+      fv_surplus
+    {% elif fascia == 'F3' %}
+      notturna_f3
+    {% else %}
+      sconosciuta
+    {% endif %}
