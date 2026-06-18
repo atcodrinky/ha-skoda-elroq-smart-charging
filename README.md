@@ -1,11 +1,8 @@
-# ha-skoda-elroq-smart-charging
-Advanced Home Assistant EV charging management for Skoda Elroq and Silla Prism with PV surplus charging, dynamic load balancing, F3 night charging, SOC control, MQTT integration, and fully customizable automation logic.
-
 # Home Assistant EV Energy Manager
 
-An advanced Home Assistant automation suite for intelligent electric vehicle charging using photovoltaic surplus, dynamic load balancing, tariff-based charging, and vehicle SOC management.
+Advanced Home Assistant EV charging management for Skoda Elroq and Silla Prism with PV surplus charging, dynamic load balancing, tariff-aware charging, MQTT integration and fully customizable automation logic.
 
-Originally developed for a **Skoda Elroq** and a **Silla Prism** wallbox, but the logic can be adapted to other EVs and charging systems.
+Originally developed for a **Skoda Elroq** and a **Silla Prism** wallbox, but the overall architecture can be adapted to many EVs, wallboxes and energy monitoring systems.
 
 ---
 
@@ -13,106 +10,107 @@ Originally developed for a **Skoda Elroq** and a **Silla Prism** wallbox, but th
 
 ### ☀️ PV Surplus Charging
 
-Uses real-time household export power to dynamically adjust charging current and maximize self-consumption.
-
-- Starts charging only when sufficient surplus is available.
-- Automatically increases or decreases charging current.
-- Stops charging when surplus becomes insufficient.
-- Works independently from night charging logic.
-
----
+- Uses photovoltaic surplus to maximize self-consumption.
+- Dynamically adjusts charging current.
+- Starts and stops automatically according to available surplus.
+- Supports configurable grid import allowance.
 
 ### 🌙 Night Charging (F3 Tariff)
 
-Automatically charges during off-peak tariff periods.
-
-- Charges up to a user-defined SOC target.
-- Can optionally limit charging power.
-- Integrated with household load management.
-
----
+- Charges during Italian off-peak tariff periods.
+- Independent user-defined charging target.
+- Optional night charging power limit.
+- Integrated with household load balancing.
 
 ### ⚡ Dynamic Load Balancing
 
-Continuously monitors total household consumption.
-
+- Continuously monitors household power consumption.
 - Prevents exceeding contractual power limits.
-- Adjusts charging current in real time.
+- Dynamically adjusts wallbox current.
 - Supports configurable safety margins.
-
----
 
 ### 🔋 Dual SOC Strategy
 
-Two independent charging targets:
+Separate charging targets for different use cases.
 
 #### User Target
 
-Daily charging target used for:
-
-- Night charging
-- Routine charging
+Used for daily and night charging.
 
 Example:
 
-- User target = 50%
+```text
+50%
+```
 
 #### Vehicle Target
 
-Maximum charging target used for:
-
-- Solar surplus charging
-- Force charging
+Used for photovoltaic surplus and force charging.
 
 Example:
 
-- Vehicle target = 80%
-
----
+```text
+80%
+```
 
 ### 🚀 Force Charge Mode
 
-Immediately starts charging regardless of:
+Starts charging immediately regardless of:
 
-- Tariff
+- Tariff band
 - Solar production
 - Night charging conditions
 
 Charging continues until the vehicle target is reached.
 
----
-
 ### 🛑 Master Stop
 
-Emergency charging lock.
+Global charging lock.
 
 When enabled:
 
-- Revokes charging authorization
-- Stops charging immediately
-- Blocks all automation restarts
+- Charging authorization is revoked.
+- Charging stops immediately.
+- All charging automations are blocked.
 
 The lock remains active until manually disabled or the charging cable is disconnected.
 
----
-
 ### 📡 MQTT Integration
 
-Direct communication with the wallbox using MQTT.
+Direct communication with the wallbox through MQTT.
 
-Supported functions include:
+Supported functions:
 
 - Charging authorization
 - Authorization revocation
-- Mode switching
+- Charging mode switching
 - Dynamic current limits
 - Status monitoring
 
 ---
 
-### 📊 Charging Modes
+## Design Philosophy
 
-The system automatically operates in one of the following modes:
+Unlike many commercial EV charging solutions, this project does not depend on proprietary load-balancing hardware.
+
+All charging decisions are made directly inside Home Assistant using:
+
+- MQTT
+- Template sensors
+- Helpers
+- Native automations
+
+This allows complete flexibility and easy adaptation to different:
+
+- EVs
+- Wallboxes
+- Inverters
+- Energy meters
+- Solar installations
+
+---
+
+## Charging Modes
 
 | Mode | Description |
 |--------|-------------|
@@ -124,111 +122,73 @@ The system automatically operates in one of the following modes:
 
 ---
 
+## Documentation
+
+### Setup
+
+- [Installation Guide](docs/installation.md)
+- [Required Entities](docs/entities.md)
+
+### System
+
+- [System Logic](docs/logic.md)
+- [Troubleshooting](docs/troubleshooting.md)
+
+---
+
 ## Required Integrations
 
 - Home Assistant
 - MQTT Broker
-- Silla Prism MQTT integration
-- Skoda Connect integration
-- Solar production sensor
-- Grid import/export sensor
-- [PUN Sensor integration](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com) (Italian energy tariffs and F1/F2/F3 detection)
+- Silla Prism MQTT Integration
+- Skoda Connect Integration
+- Solar Production Sensor
+- Grid Import/Export Sensor
+- PUN Sensor Integration
 
----
+### PUN Sensor
 
-### Optional Integrations
-
-#### PUN Sensor
-
-This project relies on the excellent PUN Sensor integration for Italian electricity tariffs (F1/F2/F3) and real-time PUN pricing.
+This project relies on the excellent PUN Sensor integration for Italian electricity tariffs and tariff-band detection.
 
 Repository:
 
- [Prezzi PUN del mese](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
+https://github.com/virtualdj/pun_sensor
 
-Features provided by the integration include:
+Used for:
 
-- Current tariff band (F1 / F2 / F3)
-- Monthly average tariff prices
-- Hourly PUN price
-- Zonal electricity prices
-- 15-minute market prices
-
-The charging automations use the current tariff band to distinguish between:
-
-- Night charging (F3)
-- Standard daytime operation (F1/F2)
-- PV surplus charging
-
-Installation is available through HACS or manual installation.  [Prezzi PUN del mese](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
+- F1 / F2 / F3 tariff detection
+- Night charging logic
+- Tariff-aware charging decisions
 
 ---
 
-## Required Helpers
+## Repository Structure
 
-### Input Booleans
-
-```yaml
-input_boolean:
-  forza_ricarica:
-  ev_master_stop:
-  ev_solar_controller_active:
+```text
+ha-skoda-elroq-smart-charging/
+│
+├── README.md
+├── LICENSE
+│
+├── automations/
+│   ├── gestione_fascia.yaml
+│   ├── gestione_soc.yaml
+│   ├── gestione_carichi.yaml
+│   ├── surplus_fv.yaml
+│   ├── master_stop.yaml
+│   └── ...
+│
+├── dashboard/
+│   └── ultra_card.yaml
+│
+├── images/
+│
+└── docs/
+    ├── installation.md
+    ├── entities.md
+    ├── logic.md
+    └── troubleshooting.md
 ```
-
-### Input Numbers
-
-```yaml
-input_number:
-  limite_batteria_auto:
-  limite_batteria_manuale:
-  limite_import_permesso:
-  limite_potenza_contratto_w:
-```
-
-### Input Datetimes
-
-```yaml
-input_datetime:
-  ev_last_auth_press:
-  ev_last_revoke_press:
-```
-
-### Input Select
-
-```yaml
-input_select:
-  ev_modalita_ricarica_corrente:
-```
-
----
-
-## Automations Included
-
-- EV - Surplus FV
-- EV - Gestione Fascia
-- EV - Gestione Carichi
-- EV - Gestione SOC
-- EV - Force Charge
-- EV - Master Stop
-- EV - Protection Limits
-- EV - Smart Exit From Force
-- EV - Charging Notifications
-
----
-
-## Dashboard
-
-The project includes a dedicated EV dashboard featuring:
-
-- Vehicle SOC
-- Charging status
-- Charging mode
-- Solar surplus monitoring
-- Charging power
-- User and vehicle targets
-- Force Charge controls
-- Master Stop controls
-- Live energy flow information
 
 ---
 
@@ -267,15 +227,33 @@ Waiting
 
 ---
 
+## Dashboard
+
+Included dashboard features:
+
+- Vehicle SOC
+- Charging status
+- Charging mode
+- Solar surplus monitoring
+- Charging power
+- Active charging target
+- Estimated charging time remaining
+- Estimated charging completion time
+- Force Charge controls
+- Master Stop controls
+- Real-time energy flow information
+
+---
+
 ## Goals
 
-This project aims to:
+The project aims to:
 
 - Maximize photovoltaic self-consumption
-- Reduce energy costs
-- Avoid exceeding contractual power limits
-- Preserve EV battery health
-- Maintain full local control through Home Assistant
+- Reduce charging costs
+- Avoid contractual power limit violations
+- Preserve battery health
+- Maintain complete local control through Home Assistant
 
 ---
 
@@ -283,6 +261,6 @@ This project aims to:
 
 This project is provided as-is.
 
-Always verify charging behavior, electrical protections, and automation logic before using it in a production environment.
+Always verify automation behavior, charging limits, electrical protections and safety mechanisms before deploying in a production environment.
 
-The author assumes no responsibility for damage, data loss, charging interruptions, or electrical issues resulting from the use of these automations.
+The author assumes no responsibility for damage, charging interruptions, data loss or electrical issues resulting from the use of these automations.
