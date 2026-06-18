@@ -1,0 +1,31 @@
+alias: EV - Igiene controller FV (auto-off)
+description: >
+  Spegne ev_solar_controller_active solo se è rimasto ON inutilmente. Protegge
+  la logica notturna F3 senza interferire con i transitori normali di avvio del
+  FV (waiting/pause -> charging).
+triggers:
+  - trigger: template
+    id: stale_fv_controller
+    value_template: >
+      {% set forza = is_state('input_boolean.forza_ricarica','on') %} {% set
+      active = is_state('input_boolean.ev_solar_controller_active','on') %} {%
+      set stato = states('sensor.silla_prism_stato_wallbox') %} {% set rete =
+      states('sensor.rete_power') | float(0) %} {% set offset_w =
+      states('input_number.limite_import_permesso') | float(200) %} {% set v_raw
+      = states('sensor.wallbox_tensione') | float(0) %} {% set v = v_raw if
+      v_raw > 0 else 230 %} {% set v = [[v, 180] | max, 260] | min %} {% set
+      amp_fv = ((-rete + offset_w) / v) | float(0) %} {% set surplus_ok = amp_fv
+      >= 7 %}
+
+      {{
+        (not forza)
+        and active
+        and stato != 'charging'
+        and (not surplus_ok)
+      }}
+    for: "00:01:00"
+actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.ev_solar_controller_active
+mode: restart
