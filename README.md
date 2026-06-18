@@ -136,6 +136,34 @@ The system automatically operates in one of the following modes:
 
 ---
 
+### Optional Integrations
+
+#### PUN Sensor
+
+This project relies on the excellent PUN Sensor integration for Italian electricity tariffs (F1/F2/F3) and real-time PUN pricing.
+
+Repository:
+
+ [oai_citation:0‡github.com](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
+
+Features provided by the integration include:
+
+- Current tariff band (F1 / F2 / F3)
+- Monthly average tariff prices
+- Hourly PUN price
+- Zonal electricity prices
+- 15-minute market prices
+
+The charging automations use the current tariff band to distinguish between:
+
+- Night charging (F3)
+- Standard daytime operation (F1/F2)
+- PV surplus charging
+
+Installation is available through HACS or manual installation.  [oai_citation:1‡GitHub](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
+
+---
+
 ## Required Helpers
 
 ### Input Booleans
