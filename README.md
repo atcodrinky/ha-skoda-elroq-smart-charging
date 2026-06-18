@@ -144,7 +144,7 @@ This project relies on the excellent PUN Sensor integration for Italian electric
 
 Repository:
 
- [oai_citation:0‡github.com](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
+ [Prezzi PUN del mese](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
 
 Features provided by the integration include:
 
@@ -160,7 +160,7 @@ The charging automations use the current tariff band to distinguish between:
 - Standard daytime operation (F1/F2)
 - PV surplus charging
 
-Installation is available through HACS or manual installation.  [oai_citation:1‡GitHub](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
+Installation is available through HACS or manual installation.  [Prezzi PUN del mese](https://github.com/virtualdj/pun_sensor?utm_source=chatgpt.com)
 
 ---
 
