@@ -132,6 +132,7 @@ The system automatically operates in one of the following modes:
 - Skoda Connect integration
 - Solar production sensor
 - Grid import/export sensor
+- PUN Sensor integration (Italian energy tariffs and F1/F2/F3 detection)
 
 ---
 
