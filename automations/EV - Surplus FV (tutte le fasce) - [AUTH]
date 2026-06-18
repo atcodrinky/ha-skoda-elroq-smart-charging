@@ -1,0 +1,224 @@
+alias: EV - Surplus FV (tutte le fasce) - [AUTH]
+description: >
+  Controller FV incrementale stabile per Silla Prism. In F3 sotto limite utente
+  lavora solo se il surplus FV è davvero sufficiente, altrimenti lascia spazio
+  alla logica notturna / gestione carichi.
+triggers:
+  - trigger: state
+    id: grid_change
+    entity_id: sensor.rete_power
+  - trigger: state
+    id: wb_state
+    entity_id: sensor.silla_prism_stato_wallbox
+  - trigger: state
+    id: solar_toggle
+    entity_id: input_boolean.ev_solar_controller_active
+  - trigger: template
+    id: start_7a_30s
+    value_template: >
+      {% set forza = is_state('input_boolean.forza_ricarica','on') %} {% set
+      rete = states('sensor.rete_power') | float(0) %} {% set offset_w =
+      states('input_number.limite_import_permesso') | float(200) %} {% set v_raw
+      = states('sensor.wallbox_tensione') | float(0) %} {% set v = v_raw if
+      v_raw > 0 else 230 %} {% set v = [[v,180] | max,260] | min %} {% set wb_w
+      = states('sensor.wallbox_potenza') | float(0) | abs %} {% set amp_now =
+      (wb_w / v) | float(0) %} {% set amp_new_raw = amp_now + (((-rete +
+      offset_w) / v) | float(0)) %} {{ (not forza) and amp_new_raw >= 7 }}
+    for: "00:00:30"
+  - trigger: template
+    id: low_5p5_60s
+    value_template: >
+      {% set forza = is_state('input_boolean.forza_ricarica','on') %} {% set
+      active = is_state('input_boolean.ev_solar_controller_active','on') %} {%
+      set stato = states('sensor.silla_prism_stato_wallbox') %} {% set rete =
+      states('sensor.rete_power') | float(0) %} {% set offset_w =
+      states('input_number.limite_import_permesso') | float(200) %} {% set v_raw
+      = states('sensor.wallbox_tensione') | float(0) %} {% set v = v_raw if
+      v_raw > 0 else 230 %} {% set v = [[v,180] | max,260] | min %} {% set wb_w
+      = states('sensor.wallbox_potenza') | float(0) | abs %} {% set amp_now =
+      (wb_w / v) | float(0) %} {% set amp_new_raw = amp_now + (((-rete +
+      offset_w) / v) | float(0)) %} {{ (not forza) and active and stato ==
+      'charging' and amp_new_raw < 5.5 }}
+    for: "00:01:00"
+conditions:
+  - condition: state
+    entity_id: input_boolean.ev_master_stop
+    state: "off"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not soc_valid }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ forza }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ skip_in_f3 and (not active) }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'low_5p5_60s' }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "3"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_last_revoke_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_revoca_autorizzazione_ricarica
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ev_solar_controller_active
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.id == 'start_7a_30s'
+                 and stato in ['waiting','pause']
+                 and (not skip_in_f3)
+                 and amp_new_raw >= 7 }}
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ev_solar_controller_active
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "1"
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_current_limit
+              payload: "6.0"
+          - action: input_number.set_value
+            data:
+              entity_id: input_number.wallbox_last_limit_sent
+              value: 6
+          - delay: "00:00:02"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_last_auth_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_autorizza_ricarica
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.id == 'wb_state'
+                 and (not forza)
+                 and (not active)
+                 and (not skip_in_f3)
+                 and stato in ['waiting','pause']
+                 and amp_new_raw >= 7 }}
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ev_solar_controller_active
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "1"
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_current_limit
+              payload: "6.0"
+          - action: input_number.set_value
+            data:
+              entity_id: input_number.wallbox_last_limit_sent
+              value: 6
+          - delay: "00:00:02"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_last_auth_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_autorizza_ricarica
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ (not forza)
+                 and active
+                 and (not skip_in_f3)
+                 and stato in ['pause','waiting']
+                 and amp_new_raw >= 7 }}
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "1"
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_current_limit
+              payload: "6.0"
+          - action: input_number.set_value
+            data:
+              entity_id: input_number.wallbox_last_limit_sent
+              value: 6
+          - delay: "00:00:02"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_last_auth_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_autorizza_ricarica
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.id in ['grid_change','wb_state']
+                 and active
+                 and stato == 'charging'
+                 and wb_w > 500
+                 and amp_limit >= 6
+                 and diff >= 0.5 }}
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_current_limit
+              payload: "{{ amp_limit }}"
+          - action: input_number.set_value
+            data:
+              entity_id: input_number.wallbox_last_limit_sent
+              value: "{{ [amp_limit,25] | min | round(1) }}"
+mode: queued
+max: 20
+variables:
+  forza: "{{ is_state('input_boolean.forza_ricarica','on') }}"
+  fascia: "{{ states('sensor.pun_fascia_corrente') }}"
+  soc_valid: >
+    {{ states('sensor.elroq_percentuale_batteria') not in
+    ['unknown','unavailable','none',''] }}
+  soc: "{{ states('sensor.elroq_percentuale_batteria') | float(0) }}"
+  limite_utente: "{{ states('input_number.limite_batteria_manuale') | float(50) }}"
+  rete: "{{ states('sensor.rete_power') | float(0) }}"
+  offset_w: "{{ states('input_number.limite_import_permesso') | float(200) }}"
+  v_raw: "{{ states('sensor.wallbox_tensione') | float(0) }}"
+  v_grid: |
+    {% set v = v_raw if v_raw > 0 else 230 %} {{ [[v,180] | max,260] | min }}
+  wb_w: "{{ states('sensor.wallbox_potenza') | float(0) | abs }}"
+  amp_now: "{{ (wb_w / v_grid) | float(0) }}"
+  delta_a: "{{ ((-rete + offset_w) / v_grid) | float(0) }}"
+  amp_fv: "{{ ((-rete + offset_w) / v_grid) | float(0) }}"
+  amp_new_raw: "{{ amp_now + delta_a }}"
+  skip_in_f3: "{{ fascia == 'F3' and soc < limite_utente and amp_fv < 7 }}"
+  amp_limit: |
+    {% set a = amp_new_raw | float(0) %} {% if a >= 6 %}
+      {{ [a,25] | min | round(1) }}
+    {% else %}
+      {{ a | round(1) }}
+    {% endif %}
+  stato: "{{ states('sensor.silla_prism_stato_wallbox') }}"
+  active: "{{ is_state('input_boolean.ev_solar_controller_active','on') }}"
+  last_sent: "{{ states('input_number.wallbox_last_limit_sent') | float(0) }}"
+  diff: "{{ (amp_limit - last_sent) | abs }}"
