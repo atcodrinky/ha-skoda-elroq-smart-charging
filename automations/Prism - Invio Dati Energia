@@ -1,0 +1,26 @@
+alias: Prism - Invio Dati Energia
+description: Invia dati potenza alla Prism per Grafici e Modalità Solar
+triggers:
+  - entity_id:
+      - sensor.rete_power
+      - sensor.fotovoltaico_power
+      - sensor.potenza_istantanea
+    trigger: state
+actions:
+  - alias: Imposta prism/energy_data/power_grid
+    data:
+      topic: prism/energy_data/power_grid
+      payload: "{{ states('sensor.rete_power') | float(0) | round(0) }}"
+    action: mqtt.publish
+    enabled: true
+  - alias: Imposta prism/energy_data/power_solar
+    data:
+      topic: prism/energy_data/power_solar
+      payload: "{{ states('sensor.fotovoltaico_power') | float(0) | round(0) }}"
+    action: mqtt.publish
+  - alias: Imposta prism/energy_data/power_house
+    data:
+      topic: prism/energy_data/power_house
+      payload: "{{ states('sensor.potenza_istantanea') | float(0) | round(0) }}"
+    action: mqtt.publish
+mode: queued
