@@ -1,0 +1,887 @@
+type: custom:ultra-card
+card_background: var(--card-background-color, var(--ha-card-background, white))
+card_border_radius: 12
+card_border_color: var(--divider-color)
+card_border_width: 1
+card_padding: 16
+layout:
+  rows:
+    - id: row-1771400805848
+      columns:
+        - id: col-1771400855366-ufya8p0fv
+          modules:
+            - id: horizontal-1771314567082-1lometam5
+              type: horizontal
+              alignment: center
+              gap: 0.7
+              wrap: false
+              modules:
+                - id: info-1771314204479-316suf01n
+                  type: info
+                  info_entities:
+                    - entity: sensor.elroq_odometro
+                      name: Odometro
+                      icon: mdi:road-variant
+                      show_name: false
+                      name_value_layout: vertical
+                      icon_position: top
+                      name_alignment: center
+                      state_alignment: center
+                      content_distribution: space-between
+                      id: info-entity-info-1771314204479-316suf01n-0
+                  tap_action:
+                    action: none
+                  module_name: Odometro
+                - id: info-1771368584969-x9akj3xth
+                  type: info
+                  info_entities:
+                    - entity: sensor.elroq_autonomia
+                      name: Autonomia
+                      icon: mdi:ev-station
+                      show_name: false
+                      name_value_layout: vertical
+                      icon_position: top
+                      name_alignment: center
+                      state_alignment: center
+                      id: info-entity-1771368584969-no44rnh9i
+                      content_distribution: space-between
+                  tap_action:
+                    action: none
+                  module_name: Autonomia
+                - id: info-1771371286237-0s293t5dh
+                  type: info
+                  info_entities:
+                    - entity: sensor.elroq_ultimo_aggiornamento
+                      unified_template_mode: true
+                      unified_template: |-
+                        {
+                          "state_text": "{{
+                            relative_time(states.sensor.elroq_ultimo_aggiornamento.last_changed)
+                            | replace(' seconds', ' sec')
+                            | replace(' minutes', ' min')
+                            | replace(' minute', ' min')
+                            | replace(' hours', ' h')
+                            | replace(' hour', ' h')
+                            | replace(' days', ' d')
+                            | replace(' day', ' d')
+                          }}"
+                        }
+                      name_value_layout: vertical
+                      icon_position: top
+                      name_alignment: center
+                      state_alignment: center
+                      show_name: false
+                      show_state: true
+                      show_units: true
+                      tap_action:
+                        action: perform-action
+                        perform_action: button.press
+                        target:
+                          entity_id: button.elroq_wake_up_car
+                      module_name: Update
+                      confirm_action: true
+                      icon: mdi:update
+                      content_distribution: space-between
+                      name: Škoda Elroq Ultimo aggiornamento
+                      id: info-entity-info-1771371286237-0s293t5dh-0
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.elroq_wake_up_car
+                  confirm_action: true
+                  confirm_action_confirm_text: Si
+                  confirm_action_cancel_text: "No"
+                  design:
+                    hover_effect:
+                      effect: float
+                - id: info-1771367252084-bbm99leew
+                  type: info
+                  info_entities:
+                    - entity: binary_sensor.elroq_porte_chiuse
+                      name: Škoda Elroq Porte chiuse
+                      icon: mdi:lock
+                      show_name: false
+                      content_distribution: space-between
+                      name_alignment: center
+                      state_alignment: center
+                      icon_position: top
+                      unified_template_mode: true
+                      unified_template: |2-
+                            {
+                              "state_text": "{% if is_state('lock.elroq_chiusura_porte', 'locked') %}Bloccata{% elif is_state('lock.elroq_chiusura_porte', 'unlocked') %}Sbloccata{% else %}—{% endif %}",
+                              "icon": "{{ 'mdi:lock-open' if is_state('lock.elroq_chiusura_porte', 'unlocked') else 'mdi:lock' }}",
+                              "icon_color": "{{ 'yellow' if is_state('lock.elroq_chiusura_porte', 'unlocked') else 'red' }}"
+                            }
+                      name_value_layout: horizontal
+                      id: info-entity-info-1771367252084-bbm99leew-0
+                  tap_action:
+                    action: perform-action
+                    perform_action: lock.lock
+                    target:
+                      entity_id:
+                        - lock.elroq_chiusura_porte
+                  allow_wrap: true
+                  module_name: Stato Porte
+                  confirm_action: true
+                  text: Vuoi aprire/chiudere l'auto?
+                  confirm_action_confirm_text: Si
+                  confirm_action_cancel_text: "No"
+                  confirm_action_show_confirm_button: true
+                  confirm_action_show_cancel_button: true
+                  design:
+                    hover_effect:
+                      effect: float
+                  double_tap_action:
+                    action: perform-action
+                    perform_action: lock.unlock
+                    target:
+                      entity_id: lock.elroq_chiusura_porte
+                - id: info-1772065783209-o1iu4m5ua
+                  type: info
+                  info_entities:
+                    - entity: device_tracker.elroq_posizione
+                      name: Škoda Elroq Posizione
+                      icon: mdi:account
+                      show_icon: true
+                      show_name: false
+                      name_value_layout: vertical
+                      icon_position: top
+                      unified_template_mode: false
+                      content_distribution: space-between
+                      name_alignment: center
+                      state_alignment: center
+                      id: info-entity-info-1772065783209-o1iu4m5ua-0
+                  tap_action:
+                    action: none
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              display_mode: always
+              display_conditions: []
+              module_name: Info Auto
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+      column_layout: 1-col
+      design:
+        margin_top: 8px
+        margin_bottom: 8px
+        base:
+          margin_top: 8px
+          margin_bottom: 8px
+      row_name: Car Info
+    - id: row-1771194081707
+      columns:
+        - id: col-1771194110400-ougvqpgit
+          modules:
+            - id: image-1771196831747-xz5djfjtu
+              type: image
+              image_type: entity
+              image_url: /api/image/serve/24c922aa1506f5d8c8c2523bd929dd6a
+              entity: ""
+              image_entity: image.elroq_light_status_render_of_vehicle
+              image_attribute: ""
+              width: 100%
+              height: 400px
+              aspect_ratio: auto
+              object_fit: contain
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              filter_blur: 0
+              filter_brightness: 100
+              filter_contrast: 100
+              filter_saturate: 100
+              filter_hue_rotate: 0
+              filter_opacity: 100
+              rotation: 90
+              border_radius: 0
+              box_shadow: none
+              hover_enabled: false
+              hover_effect: scale
+              hover_scale: 105
+              hover_rotate: 5
+              hover_opacity: 90
+              hover_blur: 0
+              hover_brightness: 110
+              hover_shadow: none
+              hover_translate_x: 0
+              hover_translate_y: 0
+              hover_transition: 300
+              display_mode: always
+              display_conditions: []
+              margin_top: "-7rem"
+              margin:
+                top: "-7rem"
+                bottom: "-7rem"
+              margin_bottom: "-7rem"
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+      column_layout: 1-col
+      design:
+        margin_top: 8px
+        margin_bottom: 8px
+        base:
+          margin_top: 8px
+          margin_bottom: 8px
+      row_name: Immagine
+    - id: row-1771194124307
+      columns:
+        - id: col-1771194129141-dtq6mmh5r
+          modules:
+            - id: bar-1771017815281-dxst21osi
+              type: bar
+              entity: sensor.elroq_percentuale_batteria
+              percentage_type: entity
+              percentage_entity: ""
+              percentage_attribute_entity: sensor.elroq_percentuale_batteria
+              percentage_attribute_name: battery_level
+              percentage_current_entity: ""
+              percentage_total_entity: ""
+              percentage_template: ""
+              time_progress_start_entity: ""
+              time_progress_end_entity: ""
+              time_progress_direction: forward
+              time_progress_update_interval: 1000
+              range_start_entity: ""
+              range_start_attribute: ""
+              range_end_entity: ""
+              range_end_attribute: ""
+              range_current_entity: ""
+              range_current_attribute: ""
+              range_current_color: var(--accent-color)
+              percentage_min_template_mode: false
+              percentage_min_template: ""
+              percentage_max_template_mode: false
+              percentage_max_template: ""
+              height: 25
+              bar_direction: left-to-right
+              bar_size: medium
+              bar_radius: round
+              bar_style: neon-glow
+              bar_width: 100
+              bar_alignment: center
+              border_radius: 10
+              glass_blur_amount: 8
+              label_alignment: space-between
+              show_percentage: true
+              show_value: true
+              percentage_text_size: 20
+              percentage_text_alignment: center
+              percentage_text_bold: false
+              percentage_text_italic: false
+              percentage_text_strikethrough: false
+              value_position: inside
+              left_title: ""
+              left_entity: ""
+              left_condition_type: none
+              left_condition_entity: ""
+              left_condition_state: ""
+              left_template_mode: false
+              left_template: ""
+              left_title_size: 14
+              left_value_size: 14
+              left_title_color: var(--primary-text-color)
+              left_value_color: var(--primary-text-color)
+              left_enabled: false
+              left_tap_action:
+                action: nothing
+              left_hold_action:
+                action: nothing
+              left_double_tap_action:
+                action: nothing
+              right_title: ""
+              right_entity: ""
+              right_enabled: false
+              right_condition_type: none
+              right_condition_entity: ""
+              right_condition_state: ""
+              right_template_mode: false
+              right_template: ""
+              right_title_size: 14
+              right_value_size: 14
+              right_title_color: var(--primary-text-color)
+              right_value_color: var(--primary-text-color)
+              right_tap_action:
+                action: nothing
+              right_hold_action:
+                action: nothing
+              right_double_tap_action:
+                action: nothing
+              bar_color: var(--primary-color)
+              bar_background_color: ""
+              bar_border_color: var(--divider-color)
+              percentage_text_color: ""
+              dot_color: ""
+              minimal_icon_enabled: false
+              minimal_icon: ""
+              minimal_icon_mode: icon-in-dot
+              minimal_icon_size: 24
+              minimal_icon_size_auto: true
+              minimal_icon_color: ""
+              minimal_icon_use_dot_color: true
+              use_gradient: false
+              gradient_display_mode: full
+              gradient_stops:
+                - id: "1"
+                  position: 0
+                  color: "#ff0000"
+                - id: "2"
+                  position: 50
+                  color: "#ffff00"
+                - id: "3"
+                  position: 100
+                  color: "#00ff00"
+              limit_entity: input_number.limite_batteria_auto
+              limit_color: ""
+              show_scale: true
+              scale_divisions: 10
+              scale_show_labels: true
+              scale_label_size: 12
+              scale_label_color: ""
+              scale_position: above
+              animation: true
+              template_mode: false
+              template: ""
+              unified_template_mode: false
+              unified_template: ""
+              bar_animation_enabled: true
+              bar_animation_entity: sensor.silla_prism_stato_wallbox
+              bar_animation_trigger_type: state
+              bar_animation_attribute: ""
+              bar_animation_type: traffic
+              bar_animation_override_entity: ""
+              bar_animation_override_trigger_type: state
+              bar_animation_override_attribute: ""
+              bar_animation_override_value: ""
+              bar_animation_override_type: none
+              tap_action:
+                action: more-info
+                entity: sensor.elroq_percentuale_batteria
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              display_mode: always
+              display_conditions: []
+              background_color: transparent
+              module_name: Barra Batteria
+              confirm_action: false
+              bar_animation_value: charging
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+      column_layout: 1-col
+      design:
+        margin_top: 8px
+        margin_bottom: 8px
+        base:
+          margin_top: 8px
+          margin_bottom: 8px
+      row_name: Barra Batteria
+    - id: row-1772066186595
+      columns:
+        - id: col-1772066224031-45gegdpyf
+          modules:
+            - id: horizontal-1772066240845-5ylxkv430
+              type: horizontal
+              alignment: center
+              gap: 0.7
+              wrap: false
+              modules:
+                - id: info-1771370337895-4l7jg7qq9
+                  type: info
+                  info_entities:
+                    - entity: binary_sensor.elroq_caricabatterie_collegato
+                      name: Škoda Elroq Caricabatterie collegato
+                      icon: mdi:power-plug
+                      show_name: false
+                      name_value_layout: vertical
+                      icon_position: top
+                      name_alignment: center
+                      state_alignment: center
+                      id: info-entity-1771370337895-0e1mra7lu
+                      unified_template_mode: true
+                      unified_template: |-
+                        {
+                          "state_text": "{% if is_state('binary_sensor.elroq_caricabatterie_collegato','on') %}Collegata{% if is_state('sensor.elroq_tipo_di_carica','ac') %} (AC){% elif is_state('sensor.elroq_tipo_di_carica','dc') %} (DC){% endif %}{% elif is_state('binary_sensor.elroq_caricabatterie_collegato','off') %}Scollegata{% else %}—{% endif %}",
+
+                          "icon": "{% if is_state('binary_sensor.elroq_caricabatterie_collegato','on') and is_state('sensor.elroq_tipo_di_carica','dc') %}mdi:current-dc{% elif is_state('binary_sensor.elroq_caricabatterie_collegato','on') and is_state('sensor.elroq_tipo_di_carica','ac') %}mdi:current-ac{% else %}mdi:power-plug{% endif %}",
+
+                          "icon_color": "{% if is_state('binary_sensor.elroq_caricabatterie_collegato','on') %}green{% else %}red{% endif %}"
+                        }
+                      content_distribution: space-between
+                  tap_action:
+                    action: none
+                  module_name: Cavo
+                  confirm_action: false
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: navigate
+                    navigation_path: /config/devices/device/fbbbcbe8f3f2859753f9f276ad26a79b
+                  design:
+                    hover_effect:
+                      effect: grow
+                - id: info-1772066472590-6mcxxvuj3
+                  type: info
+                  info_entities:
+                    - entity: sensor.silla_prism_energia_erogata_ultima_sessione
+                      name: Ultima Sessione
+                      icon: mdi:transmission-tower-export
+                      show_name: false
+                      name_value_layout: vertical
+                      icon_position: top
+                      name_alignment: center
+                      state_alignment: center
+                      id: info-entity-1772066472590-ceie516jx
+                      unified_template_mode: false
+                      unified_template: ""
+                      show_icon: true
+                      content_distribution: space-between
+                  tap_action:
+                    action: none
+                  module_name: Ultima Sessione
+                  confirm_action: false
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: navigate
+                    navigation_path: /config/devices/device/0ea98d115fab132c6d2399997ec8e200
+                  design:
+                    hover_effect:
+                      effect: grow
+                      timing: ease
+                      intensity: normal
+                      duration: 300
+                - id: info-1772750501228-22qqedc4c
+                  type: info
+                  info_entities:
+                    - entity: sensor.wallbox_potenza
+                      name: Wallbox Potenza
+                      icon: mdi:flash
+                      show_state: true
+                      show_units: true
+                      name_value_layout: vertical
+                      show_name: false
+                      content_distribution: space-between
+                      name_alignment: center
+                      state_alignment: center
+                      icon_position: top
+                      id: info-entity-info-1772750501228-22qqedc4c-0
+                      unified_template_mode: true
+                      unified_template: |-
+                        {
+                         "state_text": "{{ (((state | float(0)) / 1000) | round(1) | string).replace('.', ',') }} kW"
+
+                          }
+                  unified_template_mode: true
+                  module_name: Potenza
+                  tap_action:
+                    action: default
+                    entity: sensor.wallbox_potenza
+                  allow_wrap: true
+                  design:
+                    hover_effect:
+                      effect: grow
+                - id: info-1778708218128-651wgel4q
+                  type: info
+                  info_entities:
+                    - entity: sensor.ev_fine_ricarica
+                      name: EV Fine Ricarica
+                      icon: mdi:car-clock
+                      show_state: true
+                      show_units: true
+                      name_value_layout: vertical
+                      show_name: false
+                      content_distribution: space-between
+                      name_alignment: center
+                      state_alignment: center
+                      icon_position: top
+                      id: info-entity-1778708218128-3jk7utp2j
+                  module_name: Fine Ricarica
+                  tap_action:
+                    action: default
+                    entity: sensor.ev_fine_ricarica
+                  allow_wrap: true
+                  design:
+                    hover_effect:
+                      effect: grow
+                - id: info-1778708260762-3xehppm59
+                  type: info
+                  info_entities:
+                    - entity: sensor.ev_tempo_rimanente
+                      name: EV Tempo Rimanente
+                      icon: mdi:clock-time-eight-outline
+                      show_state: true
+                      show_units: true
+                      name_value_layout: vertical
+                      show_name: false
+                      content_distribution: space-between
+                      name_alignment: center
+                      state_alignment: center
+                      icon_position: top
+                      id: info-entity-1778708260762-fkeszlnpq
+                  module_name: Tempo Rimanente
+                  tap_action:
+                    action: default
+                    entity: sensor.ev_tempo_rimanente
+                  allow_wrap: true
+                  design:
+                    hover_effect:
+                      effect: grow
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              display_mode: any
+              display_conditions:
+                - id: cond_1772435400086_7j0bz
+                  type: entity_state
+                  ui_expanded: true
+                  entity: binary_sensor.elroq_caricabatterie_collegato
+                  operator: "="
+                  value: "on"
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+      column_layout: 1-col
+      design:
+        margin_top: 8px
+        margin_bottom: 8px
+        base:
+          margin_top: 8px
+          margin_bottom: 8px
+      row_name: Barra Info Ricarica
+    - id: row-1771400987348
+      columns:
+        - id: col-1771403536379-ed1guxqaf
+          modules:
+            - id: text-1771414309989-25cu9yzuc
+              type: text
+              text: Limite Utente
+              link: ""
+              hide_if_no_link: false
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              icon: ""
+              icon_color: ""
+              icon_position: before
+              template_mode: false
+              template: ""
+              unified_template_mode: false
+              unified_template: ""
+              enable_hover_effect: true
+              hover_background_color: var(--divider-color)
+              text_size: 16
+              design:
+                base: {}
+              display_mode: always
+              display_conditions: []
+              module_name: Limite Utente
+              icon_size: 24
+            - id: spinbox-1772043393964-8tufnvqao
+              type: spinbox
+              min_value: 20
+              max_value: 100
+              step: 5
+              value: 50
+              layout: vertical
+              show_value: true
+              value_position: center
+              show_unit: true
+              unit: "%"
+              button_style: embossed
+              button_shape: rounded
+              button_size: 40
+              button_spacing: 4
+              button_gap: 5
+              increment_icon: mdi:plus
+              decrement_icon: mdi:minus
+              button_background_color: var(--primary-color)
+              button_text_color: white
+              value_color: var(--primary-text-color)
+              value_font_size: 18
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              display_mode: always
+              display_conditions: []
+              template_mode: false
+              template: ""
+              entity: input_number.limite_batteria_manuale
+              module_name: Pulsanti Utente
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+        - id: col-1772043974835-ef6rrgg55
+          modules:
+            - id: text-1772043990758-dr4ewf0y0
+              type: text
+              text: Limite Elroq
+              link: ""
+              hide_if_no_link: false
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              icon: ""
+              icon_color: ""
+              icon_position: before
+              template_mode: false
+              template: ""
+              unified_template_mode: false
+              unified_template: ""
+              enable_hover_effect: true
+              hover_background_color: var(--divider-color)
+              text_size: 16
+              design:
+                base: {}
+              display_mode: always
+              display_conditions: []
+              module_name: Limite Elroq
+            - id: spinbox-1772044109836-itql300nb
+              type: spinbox
+              min_value: 50
+              max_value: 100
+              step: 10
+              value: 80
+              layout: vertical
+              show_value: true
+              value_position: center
+              show_unit: true
+              unit: "%"
+              button_style: embossed
+              button_shape: rounded
+              button_size: 40
+              button_spacing: 4
+              button_gap: 5
+              increment_icon: mdi:plus
+              decrement_icon: mdi:minus
+              button_background_color: var(--primary-color)
+              button_text_color: white
+              value_color: var(--primary-text-color)
+              value_font_size: 18
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              display_mode: always
+              display_conditions: []
+              template_mode: false
+              template: ""
+              entity: input_number.limite_batteria_auto
+              module_name: Pulsanti Auto
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+        - id: col-1772064584676-bi1peiwp1
+          modules:
+            - id: text-1772064615839-flr46bfuk
+              type: text
+              text: Forza Ricarica
+              link: ""
+              hide_if_no_link: false
+              tap_action:
+                action: nothing
+              hold_action:
+                action: nothing
+              double_tap_action:
+                action: nothing
+              icon: ""
+              icon_color: ""
+              icon_position: before
+              template_mode: false
+              template: ""
+              unified_template_mode: false
+              unified_template: ""
+              enable_hover_effect: true
+              hover_background_color: var(--divider-color)
+              text_size: 16
+              design:
+                base: {}
+              display_mode: always
+              display_conditions: []
+              module_name: Forza Ricarica
+            - id: toggle-1772133247034-qr21ltkq1
+              type: toggle
+              toggle_points:
+                - id: toggle_point-1772133247034-2lptxkhj4
+                  label: "ON"
+                  icon: mdi:power-on
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.forza_ricarica
+                  background_color: var(--secondary-background-color)
+                  text_color: var(--primary-text-color)
+                  active_background_color: var(--success-color)
+                  active_text_color: white
+                  match_template_mode: false
+                  match_entity: ""
+                  match_state: ""
+                  match_template: ""
+                  unified_template_mode: true
+                  unified_template: >-
+                    { "match": "{{ is_state('input_boolean.forza_ricarica',
+                    'on') }}" }
+                  ignore_entity_state_config: false
+                - id: toggle_point-1772133247034-cbb5eg0nr
+                  label: "OFF"
+                  icon: mdi:power-off
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.forza_ricarica
+                  background_color: var(--secondary-background-color)
+                  text_color: var(--primary-text-color)
+                  active_background_color: var(--error-color)
+                  active_text_color: white
+                  match_template_mode: false
+                  match_entity: ""
+                  match_state: ""
+                  match_template: ""
+                  unified_template_mode: true
+                  unified_template: >-
+                    { "match": "{{ is_state('input_boolean.forza_ricarica',
+                    'off') }}" }
+                  ignore_entity_state_config: false
+              visual_style: button_group
+              show_title: false
+              orientation: vertical
+              alignment: center
+              size: normal
+              spacing: 33
+              show_icons: false
+              icon_size: 24px
+              icon_position: left
+              default_background_color: var(--secondary-background-color)
+              default_text_color: var(--primary-text-color)
+              default_active_background_color: var(--primary-color)
+              default_active_text_color: white
+              hold_action:
+                action: none
+              double_tap_action:
+                action: none
+              display_mode: always
+              display_conditions: []
+              tap_action:
+                action: none
+              confirm_action: true
+              confirm_action_show_confirm_button: true
+              confirm_action_show_cancel_button: true
+              confirm_action_confirm_text: Si
+              confirm_action_cancel_text: "No"
+              design:
+                hover_effect: {}
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+        - id: col-1774623936143-2qff2buk6
+          modules:
+            - id: text-1774623943077-gku6pmmkk
+              type: text
+              text: Master Stop
+              text_size: 16
+              module_name: Master Stop
+            - id: toggle-1774624532542-1cfkekr5q
+              type: toggle
+              toggle_points:
+                - id: toggle_point-1772133247034-2lptxkhj4
+                  label: "ON"
+                  icon: mdi:power-on
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.ev_master_stop
+                  background_color: var(--secondary-background-color)
+                  text_color: var(--primary-text-color)
+                  active_background_color: var(--success-color)
+                  active_text_color: white
+                  match_template_mode: false
+                  match_entity: ""
+                  match_state: ""
+                  match_template: ""
+                  unified_template_mode: true
+                  unified_template: >-
+                    { "match": "{{ is_state('input_boolean.ev_master_stop',
+                    'on') }}" }
+                  ignore_entity_state_config: false
+                - id: toggle_point-1772133247034-cbb5eg0nr
+                  label: "OFF"
+                  icon: mdi:power-off
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.ev_master_stop
+                  background_color: var(--secondary-background-color)
+                  text_color: var(--primary-text-color)
+                  active_background_color: var(--error-color)
+                  active_text_color: white
+                  match_template_mode: false
+                  match_entity: ""
+                  match_state: ""
+                  match_template: ""
+                  unified_template_mode: true
+                  unified_template: >-
+                    { "match": "{{ is_state('input_boolean.ev_master_stop',
+                    'off') }}" }
+                  ignore_entity_state_config: false
+              visual_style: button_group
+              show_title: false
+              orientation: vertical
+              alignment: center
+              size: normal
+              spacing: 32
+              show_icons: false
+              icon_size: 24px
+              icon_position: left
+              default_background_color: var(--secondary-background-color)
+              default_text_color: var(--primary-text-color)
+              default_active_background_color: var(--primary-color)
+              default_active_text_color: white
+              hold_action:
+                action: none
+              double_tap_action:
+                action: none
+              display_mode: always
+              display_conditions: []
+              tap_action:
+                action: none
+              confirm_action: true
+              confirm_action_show_confirm_button: true
+              confirm_action_show_cancel_button: true
+              confirm_action_confirm_text: Si
+              confirm_action_cancel_text: "No"
+              design:
+                hover_effect: {}
+          vertical_alignment: stretch
+          horizontal_alignment: stretch
+      column_layout: 1-4-1-4-1-4-1-4
+      design:
+        margin_top: 8px
+        margin_bottom: 8px
+        base:
+          margin_top: 8px
+          margin_bottom: 8px
+      row_name: Settings Ricarica
+card_name: Skoda Elroq
+card_shadow_enabled: false
