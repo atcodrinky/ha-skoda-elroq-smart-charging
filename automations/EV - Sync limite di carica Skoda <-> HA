@@ -1,0 +1,56 @@
+alias: EV - Sync limite di carica Skoda <-> HA
+description: >
+  Sincronizzazione bidirezionale tra input_number.limite_batteria_auto e
+  number.elroq_limite_di_carica.
+
+  Delay 3s solo HA -> Auto. 
+
+  Nessun delay Auto -> HA.
+triggers:
+  - trigger: state
+    entity_id: input_number.limite_batteria_auto
+  - trigger: state
+    entity_id: number.elroq_limite_di_carica
+conditions:
+  - condition: template
+    value_template: "{{ ha_ok and car_ok }}"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.entity_id == 'input_number.limite_batteria_auto'
+                 and ha_limit != car_limit }}
+        sequence:
+          - delay: "00:00:03"
+          - variables:
+              ha_limit_2: "{{ states('input_number.limite_batteria_auto') | float(0) }}"
+              car_limit_2: "{{ states('number.elroq_limite_di_carica') | float(0) }}"
+          - condition: template
+            value_template: "{{ ha_limit_2 != car_limit_2 }}"
+          - action: number.set_value
+            target:
+              entity_id: number.elroq_limite_di_carica
+            data:
+              value: "{{ ha_limit_2 }}"
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.entity_id == 'number.elroq_limite_di_carica'
+                 and car_limit != ha_limit }}
+        sequence:
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.limite_batteria_auto
+            data:
+              value: "{{ car_limit }}"
+mode: restart
+variables:
+  ha_limit: "{{ states('input_number.limite_batteria_auto') | float(0) }}"
+  car_limit: "{{ states('number.elroq_limite_di_carica') | float(0) }}"
+  ha_ok: >-
+    {{ states('input_number.limite_batteria_auto') not in
+    ['unknown','unavailable'] }}
+  car_ok: >-
+    {{ states('number.elroq_limite_di_carica') not in ['unknown','unavailable']
+    }}
