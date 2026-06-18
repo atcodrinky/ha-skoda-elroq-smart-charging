@@ -7,27 +7,27 @@ This project is built around Home Assistant acting as the central decision engin
 # High-Level Architecture
 
 ```text
-                     ┌──────────────────┐
-                     │   Skoda Elroq    │
-                     │  (SOC, Status)   │
-                     └────────┬─────────┘
-                              │
-                              │ Skoda Connect
-                              ▼
-┌─────────────────────────────────────────────────────┐
-│                   Home Assistant                    │
-│                                                     │
-│  ┌───────────────────────────────────────────────┐  │
-│  │            Charging Logic Engine              │  │
-│  │                                               │  │
-│  │ • Master Stop                                 │  │
-│  │ • Force Charge                                │  │
-│  │ • Night F3 Charging                           │  │
-│  │ • PV Surplus Charging                         │  │
-│  │ • Dynamic Load Balancing                      │  │
-│  │ • SOC Management                              │  │
-│  └───────────────────────────────────────────────┘  │
-└───────────────┬───────────────┬─────────────────────┘
+             ┌──────────────────┐
+             │   Skoda Elroq    │
+             │  (SOC, Status)   │
+             └────────┬─────────┘
+                      │
+                      │ Skoda Connect
+                      ▼
+┌──────────────────────────────────────────────┐
+│                Home Assistant                │
+│                                              │
+│  ┌────────────────────────────────────────┐  │
+│  │          Charging Logic Engine         │  │
+│  │                                        │  │
+│  │ • Master Stop                          │  │
+│  │ • Force Charge                         │  │
+│  │ • Night F3 Charging                    │  │
+│  │ • PV Surplus Charging                  │  │
+│  │ • Dynamic Load Balancing               │  │
+│  │ • SOC Management                       │  │
+│  └────────────────────────────────────────┘  │
+└────────────────────────┬─────────────────────┘
                 │               │
                 │               │
                 ▼               ▼
