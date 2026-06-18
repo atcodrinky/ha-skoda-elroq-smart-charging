@@ -1,0 +1,94 @@
+alias: EV - Gestione Fascia (lavora SOLO in F3) - [AUTH]
+description: >
+  Logica notturna F3 con Autostart OFF + AUTH via HA. Parte solo se: - siamo in
+  F3 - FORZA è OFF - SOC < limite_utente - FV insufficiente (amp_fv < 6) -
+  wallbox in waiting/pause Poi Gestione Carichi modula entro il limite
+  contratto.
+triggers:
+  - trigger: state
+    entity_id: sensor.pun_fascia_corrente
+  - trigger: state
+    entity_id: sensor.elroq_percentuale_batteria
+  - trigger: state
+    entity_id: sensor.silla_prism_stato_wallbox
+  - trigger: state
+    entity_id: sensor.rete_power
+  - trigger: time_pattern
+    minutes: /1
+conditions:
+  - condition: state
+    entity_id: input_boolean.ev_master_stop
+    state: "off"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not soc_valid }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ forza }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ fascia != 'F3' }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ fascia == 'F3'
+                 and sun_below_horizon
+                 and not solar_active
+                 and soc < limite_utente
+                 and amp >= 7
+                 and amp_fv < 6
+                 and stato in ['waiting','pause'] }}
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ev_solar_controller_active
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_current_limit
+              payload: "6.0"
+          - action: input_number.set_value
+            data:
+              entity_id: input_number.wallbox_last_limit_sent
+              value: 6
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "2"
+          - delay: "00:00:01"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_last_auth_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_autorizza_ricarica
+mode: restart
+variables:
+  forza: "{{ is_state('input_boolean.forza_ricarica','on') }}"
+  solar_active: "{{ is_state('input_boolean.ev_solar_controller_active','on') }}"
+  fascia: "{{ states('sensor.pun_fascia_corrente') }}"
+  sun_below_horizon: "{{ is_state('sun.sun', 'below_horizon') }}"
+  soc_valid: >
+    {{ states('sensor.elroq_percentuale_batteria') not in
+    ['unknown','unavailable','none',''] }}
+  soc: "{{ states('sensor.elroq_percentuale_batteria') | float(0) }}"
+  stato: "{{ states('sensor.silla_prism_stato_wallbox') }}"
+  limite_utente: "{{ states('input_number.limite_batteria_manuale') | float(50) }}"
+  limite_w: "{{ states('input_number.limite_potenza_contratto_w') | float(5700) }}"
+  potenza_tot: "{{ states('sensor.potenza_istantanea') | float(0) }}"
+  potenza_wallbox: "{{ states('sensor.wallbox_potenza') | float(0) | abs }}"
+  potenza_casa: "{{ (potenza_tot - potenza_wallbox) | float(0) }}"
+  v_raw: "{{ states('sensor.wallbox_tensione') | float(0) }}"
+  v_grid_raw: "{{ v_raw if v_raw > 0 else 230 }}"
+  v_grid: "{{ [[v_grid_raw | float(230), 180] | max, 260] | min }}"
+  margine_w: "{{ [limite_w - potenza_casa, 0] | max }}"
+  amp: "{{ (margine_w / v_grid) | round(1) }}"
+  rete: "{{ states('sensor.rete_power') | float(0) }}"
+  offset_w: "{{ states('input_number.limite_import_permesso') | float(200) }}"
+  amp_fv: "{{ ((-rete + offset_w) / v_grid) | float(0) }}"
