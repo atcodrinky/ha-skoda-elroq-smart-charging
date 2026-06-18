@@ -1,0 +1,46 @@
+alias: EV - MASTER STOP
+description: >
+  Blocco persistente ricarica EV. Rimane ON finché non viene disattivato
+  manualmente oppure finché il cavo viene scollegato.
+triggers:
+  - trigger: state
+    entity_id: input_boolean.ev_master_stop
+    to: "on"
+  - trigger: state
+    entity_id: sensor.silla_prism_stato_wallbox
+    to: idle
+    enabled: true
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.entity_id == 'input_boolean.ev_master_stop' }}
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id:
+                - input_boolean.forza_ricarica
+                - input_boolean.ev_solar_controller_active
+            data: {}
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "3"
+          - delay: "00:00:02"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_revoca_autorizzazione_ricarica
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.entity_id == 'sensor.silla_prism_stato_wallbox' }}
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id:
+                - input_boolean.ev_master_stop
+                - input_boolean.forza_ricarica
+                - input_boolean.ev_solar_controller_active
+            data: {}
+mode: single
