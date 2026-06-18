@@ -1,0 +1,101 @@
+alias: EV - Gestione SOC - [AUTH]
+description: >
+  🔋 Protezione SOC (Autostart OFF + AUTH via HA):
+
+  - Stop assoluto: SOC >= limite_auto -> mode 3 + REVOCA auth + FV controller
+  OFF.
+    Se FORZA è attiva viene disattivata.
+
+  - Stop in F3 (solo NOTTE e FORZA OFF): se SOC >= limite_utente e FV
+  insufficiente
+    (amp_fv < 6) mentre carica -> mode 3 + REVOCA auth + FV controller OFF.
+triggers:
+  - entity_id:
+      - sensor.elroq_percentuale_batteria
+      - sensor.pun_fascia_corrente
+      - sensor.silla_prism_stato_wallbox
+      - sensor.rete_power
+      - input_number.limite_batteria_auto
+      - input_number.limite_batteria_manuale
+      - input_boolean.forza_ricarica
+      - input_number.limite_import_permesso
+    trigger: state
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not soc_valid }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ soc >= limite_auto and stato != 'pause' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_boolean.forza_ricarica
+                    state: "on"
+                sequence:
+                  - target:
+                      entity_id: input_boolean.forza_ricarica
+                    action: input_boolean.turn_off
+          - data:
+              topic: prism/1/command/set_mode
+              payload: "3"
+            action: mqtt.publish
+          - delay: "00:00:01"
+          - target:
+              entity_id: input_datetime.ev_last_revoke_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+            action: input_datetime.set_datetime
+          - target:
+              entity_id: button.silla_prism_revoca_autorizzazione_ricarica
+            action: button.press
+          - target:
+              entity_id: input_boolean.ev_solar_controller_active
+            action: input_boolean.turn_off
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ (not forza)
+                 and fascia == 'F3'
+                 and is_state('sun.sun','below_horizon')
+                 and soc >= limite_utente
+                 and amp_fv < 6
+                 and stato == 'charging' }}
+        sequence:
+          - data:
+              topic: prism/1/command/set_mode
+              payload: "3"
+            action: mqtt.publish
+          - delay: "00:00:01"
+          - target:
+              entity_id: input_datetime.ev_last_revoke_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+            action: input_datetime.set_datetime
+          - target:
+              entity_id: button.silla_prism_revoca_autorizzazione_ricarica
+            action: button.press
+          - target:
+              entity_id: input_boolean.ev_solar_controller_active
+            action: input_boolean.turn_off
+mode: restart
+variables:
+  forza: "{{ is_state('input_boolean.forza_ricarica','on') }}"
+  soc_valid: |
+    {{ states('sensor.elroq_percentuale_batteria') not in
+       ['unknown','unavailable','none',''] }}
+  soc: "{{ states('sensor.elroq_percentuale_batteria') | float(0) }}"
+  stato: "{{ states('sensor.silla_prism_stato_wallbox') }}"
+  fascia: "{{ states('sensor.pun_fascia_corrente') }}"
+  limite_auto: "{{ states('input_number.limite_batteria_auto') | float(80) }}"
+  limite_utente: "{{ states('input_number.limite_batteria_manuale') | float(50) }}"
+  offset_w: "{{ states('input_number.limite_import_permesso') | float(200) }}"
+  v_raw: "{{ states('sensor.wallbox_tensione') | float(0) }}"
+  v_grid_raw: "{{ v_raw if v_raw > 0 else 230 }}"
+  v_grid: "{{ [[v_grid_raw | float(230), 180] | max, 260] | min }}"
+  amp_fv: >
+    {% set rete = states('sensor.rete_power') | float(0) %} {% set off =
+    offset_w | float(0) %} {{ ((-rete + off) / v_grid) | float(0) }}
