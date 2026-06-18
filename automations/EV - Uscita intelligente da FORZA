@@ -1,0 +1,73 @@
+alias: EV - Uscita intelligente da FORZA
+description: |
+  Quando disattivo FORZA, decide se lasciare continuare la carica
+  secondo le logiche normali oppure se fermarla.
+triggers:
+  - trigger: state
+    entity_id: input_boolean.forza_ricarica
+    from: "on"
+    to: "off"
+conditions:
+  - condition: state
+    entity_id: sensor.silla_prism_stato_wallbox
+    state: charging
+  - condition: state
+    entity_id: input_boolean.ev_master_stop
+    state: "off"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not soc_valid }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ continua_notturna }}"
+        sequence: []
+      - conditions:
+          - condition: template
+            value_template: "{{ continua_fv }}"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ev_solar_controller_active
+      - conditions:
+          - condition: template
+            value_template: "{{ not continua_notturna and not continua_fv }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: prism/1/command/set_mode
+              payload: "3"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_last_revoke_press
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          - action: button.press
+            target:
+              entity_id: button.silla_prism_revoca_autorizzazione_ricarica
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ev_solar_controller_active
+mode: restart
+variables:
+  stato: "{{ states('sensor.silla_prism_stato_wallbox') }}"
+  fascia: "{{ states('sensor.pun_fascia_corrente') }}"
+  soc_valid: |
+    {{ states('sensor.elroq_percentuale_batteria') not in
+       ['unknown','unavailable','none',''] }}
+  soc: "{{ states('sensor.elroq_percentuale_batteria') | float(0) }}"
+  limite_utente: "{{ states('input_number.limite_batteria_manuale') | float(50) }}"
+  solar_active: "{{ is_state('input_boolean.ev_solar_controller_active','on') }}"
+  rete: "{{ states('sensor.rete_power') | float(0) }}"
+  offset_w: "{{ states('input_number.limite_import_permesso') | float(200) }}"
+  v_raw: "{{ states('sensor.wallbox_tensione') | float(0) }}"
+  v_grid: |
+    {% set v = v_raw if v_raw > 0 else 230 %} {{ [[v, 180] | max, 260] | min }}
+  wb_w: "{{ states('sensor.wallbox_potenza') | float(0) | abs }}"
+  amp_now: "{{ (wb_w / (v_grid | float(230))) | float(0) }}"
+  delta_a: "{{ ((-rete + offset_w) / (v_grid | float(230))) | float(0) }}"
+  amp_new_raw: "{{ (amp_now + delta_a) | float(0) }}"
+  continua_notturna: "{{ fascia == 'F3' and soc < limite_utente }}"
+  continua_fv: "{{ amp_new_raw >= 7 }}"
