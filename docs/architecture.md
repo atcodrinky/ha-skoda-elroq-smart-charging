@@ -18,14 +18,14 @@ This project is built around Home Assistant acting as the central decision engin
 │                   Home Assistant                    │
 │                                                     │
 │  ┌───────────────────────────────────────────────┐  │
-│  │            Charging Logic Engine             │  │
+│  │            Charging Logic Engine              │  │
 │  │                                               │  │
-│  │ • Master Stop                                │  │
-│  │ • Force Charge                               │  │
-│  │ • Night F3 Charging                          │  │
-│  │ • PV Surplus Charging                        │  │
-│  │ • Dynamic Load Balancing                     │  │
-│  │ • SOC Management                             │  │
+│  │ • Master Stop                                 │  │
+│  │ • Force Charge                                │  │
+│  │ • Night F3 Charging                           │  │
+│  │ • PV Surplus Charging                         │  │
+│  │ • Dynamic Load Balancing                      │  │
+│  │ • SOC Management                              │  │
 │  └───────────────────────────────────────────────┘  │
 └───────────────┬───────────────┬─────────────────────┘
                 │               │
